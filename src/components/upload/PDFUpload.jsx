@@ -1,12 +1,19 @@
-import { useRef, useState } from 'react'
+import { useImperativeHandle, useRef, useState } from 'react'
 
-function PDFUpload({ onUpload, onUploadComplete }) {
+// ref exposes { openFilePicker } so a parent (e.g. Navbar button) can trigger it directly
+function PDFUpload({ onUpload, onUploadComplete, ref }) {
   const inputRef = useRef(null)
   const [isDragging, setIsDragging] = useState(false)
   const [status, setStatus] = useState('idle') // idle | uploading | success | error
   const [fileName, setFileName] = useState('')
   const [progress, setProgress] = useState(0)
   const [errorMsg, setErrorMsg] = useState('')
+
+  useImperativeHandle(ref, () => ({
+    openFilePicker() {
+      inputRef.current?.click()
+    },
+  }))
 
   function isValidPdf(file) {
     return file?.type === 'application/pdf' || file?.name?.toLowerCase().endsWith('.pdf')
@@ -67,8 +74,6 @@ function PDFUpload({ onUpload, onUploadComplete }) {
           className="sr-only"
           onChange={(e) => { handleFile(e.target.files?.[0]); e.target.value = '' }}
         />
-
-        {/* PDF icon */}
         <svg xmlns="http://www.w3.org/2000/svg" className="mb-2 h-8 w-8 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
           <polyline points="14 2 14 8 20 8" />
@@ -76,10 +81,7 @@ function PDFUpload({ onUpload, onUploadComplete }) {
           <line x1="16" y1="17" x2="8" y2="17" />
           <line x1="10" y1="9" x2="8" y2="9" />
         </svg>
-
-        <p className="text-sm font-semibold text-slate-700">
-          Drag &amp; drop a PDF here
-        </p>
+        <p className="text-sm font-semibold text-slate-700">Drag &amp; drop a PDF here</p>
         <p className="mt-1 text-xs text-slate-400">or click to browse</p>
       </div>
 
@@ -91,10 +93,7 @@ function PDFUpload({ onUpload, onUploadComplete }) {
             <span>{progress}%</span>
           </div>
           <div className="h-2 overflow-hidden rounded-full bg-slate-200">
-            <div
-              className="h-full rounded-full bg-blue-600 transition-all duration-150"
-              style={{ width: `${progress}%` }}
-            />
+            <div className="h-full rounded-full bg-blue-600 transition-all duration-150" style={{ width: `${progress}%` }} />
           </div>
         </div>
       )}

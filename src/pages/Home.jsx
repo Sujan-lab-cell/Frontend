@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import Navbar from '../components/layout/Navbar'
 import Sidebar from '../components/layout/Sidebar'
 import PDFUpload from '../components/upload/PDFUpload'
@@ -8,11 +8,23 @@ import { uploadPdf } from '../services/uploadService'
 import { sendMessage } from '../services/chatService'
 
 function Home() {
-  const [messages, setMessages]         = useState([])
-  const [isLoading, setIsLoading]       = useState(false)
+  const [messages, setMessages]             = useState([])
+  const [isLoading, setIsLoading]           = useState(false)
   const [activeDocument, setActiveDocument] = useState(null)
-  const [chatHistory, setChatHistory]   = useState([])
-  const [sidebarOpen, setSidebarOpen]   = useState(false)
+  const [chatHistory, setChatHistory]       = useState([])
+  const [sidebarOpen, setSidebarOpen]       = useState(false)
+  const uploadRef                           = useRef(null)
+
+  // Called by both the Navbar button and the sidebar slot
+  function handleUploadClick() {
+    // On mobile: open the sidebar so the user sees the upload widget
+    // On desktop: directly trigger the file picker (sidebar always visible)
+    if (window.innerWidth < 1024) {
+      setSidebarOpen(true)
+    } else {
+      uploadRef.current?.openFilePicker()
+    }
+  }
 
   async function handleSend(text) {
     const trimmed = text.trim()
@@ -72,7 +84,7 @@ function Home() {
     // Prevent body scroll when mobile sidebar is open
     <div className={`flex min-h-screen flex-col bg-slate-50 text-slate-950 ${sidebarOpen ? 'overflow-hidden lg:overflow-auto' : ''}`}>
       <Navbar
-        onUploadClick={() => setSidebarOpen(true)}
+        onUploadClick={handleUploadClick}
         onMenuClick={() => setSidebarOpen((v) => !v)}
         sidebarOpen={sidebarOpen}
       />
@@ -87,6 +99,7 @@ function Home() {
           onSelectChat={() => {}}
         >
           <PDFUpload
+            ref={uploadRef}
             onUpload={uploadPdf}
             onUploadComplete={(doc) => {
               setActiveDocument(doc)
